@@ -7,11 +7,11 @@
     tools:context=".ScanActivity">
 
     <TextView
-        android:id="@+id/ScanText"
+        android:id="@+id/ScanTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="TextView"
+        android:text="Lancer le Scan BLE"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -25,17 +25,17 @@
         android:layout_marginTop="32dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ScanText" />
+        app:layout_constraintTop_toBottomOf="@+id/ScanTitle" />
 
     <ImageButton
         android:id="@+id/playbutton"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:scaleType="centerInside"
-        app:layout_constraintBottom_toBottomOf="@+id/ScanText"
+        app:layout_constraintBottom_toBottomOf="@+id/ScanTitle"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/ScanText"
-        app:layout_constraintTop_toTopOf="@+id/ScanText"
+        app:layout_constraintStart_toEndOf="@+id/ScanTitle"
+        app:layout_constraintTop_toTopOf="@+id/ScanTitle"
         app:srcCompat="@drawable/play" />
 
     <androidx.recyclerview.widget.RecyclerView

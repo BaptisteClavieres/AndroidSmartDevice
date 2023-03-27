@@ -1,12 +1,18 @@
 package fr.isen.clavieres.androidsmartdevice
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Context
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
+import fr.isen.clavieres.androidsmartdevice.databinding.ActivityScanBinding
 import org.w3c.dom.Text
 
 class ScanActivity : AppCompatActivity() {
@@ -15,72 +21,122 @@ class ScanActivity : AppCompatActivity() {
 
     private val bluetoothAdapter: BluetoothAdapter? by
     lazy(LazyThreadSafetyMode.NONE){
-        val bluetoothManager :
-                getSystemService(Context.BLUETOOTH_Service) as BluetoothManager
+        val bluetoothManager =
+            getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
     }
 
-    private var aScanning = false
+    val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        permission ->
+        if (permission.all {it.value}) {
+            scanBLEDevices()
+        }
+    }
 
+    private var mScanning = false
+
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityScanBinding.inflate(layoutInflater)
-        setContentView(R.layout.activity_scan)
+        setContentView(binding.root)
 
-        var mainText = findViewById<TextView>(R.id.ScanText)
-        mainText.setText("Lancer le Scan BLE")
+        if(bluetoothAdapter?.isEnabled == true){
+            scanDeviceWithPermission()
+            Toast.makeText(this,"bluetooth activer", Toast.LENGTH_LONG).show()
+        }else{
+            handleBLENotAvailable()
+            Toast.makeText(this,"bluetooth pas activer", Toast.LENGTH_LONG).show()
+        }
 
-        binding.ScanText.setOnClickListener {
+        binding.ScanTitle.setOnClickListener {
+            togglePlayPauseAction()
+        }
+        binding.playbutton.setOnClickListener {
+            togglePlayPauseAction()
+        }
+
+        binding.scanList.layoutManager = LinearLayoutManager(this)
+        binding.scanList.adapter = ScanAdapter(arrayListOf("Device 1", "Device 2"))
+
+
+        binding.playbutton.setOnClickListener {
+            val progressBar = findViewById<ProgressBar>(R.id.progressBar)
+
+            progressBar.setIndeterminate(true)
+
+        }
+
+        // binding.ScanTitle.layoutManage = LinearLayoutManager(this)
+        // binding.ScanTitle.layoutAdapter = LinearLayoutManager(this)
+
+    }
+
+    private fun handleBLENotAvailable() {
+        binding.ScanTitle.text = getString(R.string.ble_scan_title_pause)
+    }
+
+    private fun scanDeviceWithPermission() {
+        if(allPermissionGranted()){
+            scanBLEDevices()
+        }else {
+            //request toutes les permissions
+            requestPermissionLauncher.launch(getAllPermission())
+        }
+    }
+
+    private fun scanBLEDevices() {
+        initToggleActions()
+    }
+
+    private fun initToggleActions() {
+        binding.ScanTitle.setOnClickListener {
             togglePlayPauseAction()
         }
 
         binding.playbutton.setOnClickListener {
             togglePlayPauseAction()
         }
-
-        binding.scanList.layoutManager = LinearLayoutManager ( context: this)
-        binding.scanList.adapter = ScanAdapter (arrayListOf("Device 1", "Device 2"))
-
     }
 
-    private fun scandeviceWithPermissions(){
-        if (allPermissionsGranted()){
-            scanBLEDevices()
-        }
-        else{
-            //request permission pour TOUTES les permissions
-        }
-    }
-
-    private fun scanBLEDevices(){
-       initToggleActions()
-    }
-
-    private fun allPermissionsGranted(){
-        var allPermissions = getAllPermissions()
+    private fun allPermissionGranted(): Boolean {
+        val allPermissions = getAllPermission()
         return allPermissions.all {
-            //a remplacer par la verification de chaque permission
+            // à remplacer par la vérification de chaque permission
             true
         }
     }
 
-    private fun getAllPermissions(): Array<String> {
-        return arrayOf(Manifest.permission.BLUETOOTH_ADMIN)
+    private fun getAllPermission(): Array<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN)
+        }
+        else{
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            )
+        }
+
     }
-
-
 
     private fun togglePlayPauseAction(){
-        aScanning = !aScanning
-        if (aScanning){
-            binding.ScanText.text = "Scan en cours..."
-            binding.playbutton.text.text = getString(R.drawable.pause)
+        mScanning = !mScanning
+        if(mScanning){
+            binding.ScanTitle.text = getString(R.string.ble_scan_title_pause)
+            binding.playbutton.setImageResource(R.drawable.pause)
             binding.progressBar.isVisible = true
-        }
-        else {
-            binding.ScanText.text = "Lancer le scan BLE"
-            binding.playbutton.text.text = getString(R.drawable.play)
+        } else {
+            binding.ScanTitle.text = getString(R.string.ble_scan_title_play)
+            binding.playbutton.setImageResource(R.drawable.play)
             binding.progressBar.isVisible = false
         }
+
     }
+
+
 }
