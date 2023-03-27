@@ -5,11 +5,14 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import fr.isen.clavieres.androidsmartdevice.databinding.ActivityScanBinding
@@ -35,6 +38,8 @@ class ScanActivity : AppCompatActivity() {
 
     private var mScanning = false
 
+    private val REQUEST_PERMISSIONS_CODE = 1234
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,10 +48,10 @@ class ScanActivity : AppCompatActivity() {
 
         if(bluetoothAdapter?.isEnabled == true){
             scanDeviceWithPermission()
-            Toast.makeText(this,"bluetooth activer", Toast.LENGTH_LONG).show()
+            Toast.makeText(this,"bluetooth activé", Toast.LENGTH_LONG).show()
         }else{
             handleBLENotAvailable()
-            Toast.makeText(this,"bluetooth pas activer", Toast.LENGTH_LONG).show()
+            Toast.makeText(this,"bluetooth pas activé", Toast.LENGTH_LONG).show()
         }
 
         binding.ScanTitle.setOnClickListener {
@@ -101,10 +106,16 @@ class ScanActivity : AppCompatActivity() {
 
     private fun allPermissionGranted(): Boolean {
         val allPermissions = getAllPermission()
-        return allPermissions.all {
-            // à remplacer par la vérification de chaque permission
-            true
-        }
+        return allPermissions.all { permission ->
+            ContextCompat.checkSelfPermission(
+            this, permission) == PackageManager.PERMISSION_GRANTED
+        } || requestPermissions(allPermissions)
+            //true
+    }
+
+    private fun requestPermissions(permissions: Array<String>): Boolean {
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_PERMISSIONS_CODE)
+        return false
     }
 
     private fun getAllPermission(): Array<String> {
