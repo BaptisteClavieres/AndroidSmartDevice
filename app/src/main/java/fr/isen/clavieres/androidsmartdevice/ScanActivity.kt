@@ -71,6 +71,7 @@ class ScanActivity : AppCompatActivity() {
         }
 
         binding.scanList.layoutManager = LinearLayoutManager(this)
+        binding.scanList.setHasFixedSize(false)
         binding.scanList.adapter = ScanAdapter(arrayListOf()) {
             val intent = Intent(this, DeviceActivity::class.java)
             intent.putExtra("device", it)
