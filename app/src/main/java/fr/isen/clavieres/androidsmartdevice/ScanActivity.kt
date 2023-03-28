@@ -4,11 +4,17 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
@@ -40,6 +46,9 @@ class ScanActivity : AppCompatActivity() {
 
     private val REQUEST_PERMISSIONS_CODE = 1234
 
+
+    private val handler = Handler(Looper.getMainLooper())
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,15 +66,19 @@ class ScanActivity : AppCompatActivity() {
         binding.ScanTitle.setOnClickListener {
             togglePlayPauseAction()
         }
-        binding.playbutton.setOnClickListener {
+        binding.playButton.setOnClickListener {
             togglePlayPauseAction()
         }
 
         binding.scanList.layoutManager = LinearLayoutManager(this)
-        binding.scanList.adapter = ScanAdapter(arrayListOf("Device 1", "Device 2"))
+        binding.scanList.adapter = ScanAdapter(arrayListOf()) {
+            val intent = Intent(this, DeviceActivity::class.java)
+            intent.putExtra("device", it)
+            startActivity(intent)
+        }
 
 
-        binding.playbutton.setOnClickListener {
+        binding.playButton.setOnClickListener {
             val progressBar = findViewById<ProgressBar>(R.id.progressBar)
 
             progressBar.setIndeterminate(true)
@@ -84,23 +97,62 @@ class ScanActivity : AppCompatActivity() {
     private fun scanDeviceWithPermission() {
         if(allPermissionGranted()){
             scanBLEDevices()
+            initToggleActions()
         }else {
-            //request toutes les permissions
+
             requestPermissionLauncher.launch(getAllPermission())
         }
     }
 
+    @SuppressLint("MissingPermission")
+    override fun onStop(){
+        super.onStop()
+        if (bluetoothAdapter?.isEnabled == true && allPermissionGranted()) {
+            scanBLEDevices()
+            bluetoothAdapter?.bluetoothLeScanner?.stopScan(leScanCallback)
+        }
+    }
+
+
+
+    // Stops scanning after 10 seconds.
+
+
+    @SuppressLint("MissingPermission")
     private fun scanBLEDevices() {
-        initToggleActions()
+        if (!mScanning) { // Stops mScanning after a pre-defined scan period.
+            handler.postDelayed({
+                mScanning = false
+                bluetoothAdapter?.bluetoothLeScanner?.stopScan(leScanCallback)
+                togglePlayPauseAction()
+            }, SCAN_PERIOD)
+            mScanning = true
+            bluetoothAdapter?.bluetoothLeScanner?.startScan(leScanCallback)
+        } else {
+            mScanning = false
+            bluetoothAdapter?.bluetoothLeScanner?.stopScan(leScanCallback)
+        }
+        togglePlayPauseAction()
+    }
+
+
+    // Device scan callback.
+    private val leScanCallback: ScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            super.onScanResult(callbackType, result)
+            Log.d("Scan", "result: $result")
+            (binding.scanList.adapter as ScanAdapter)?.addDevice(result.device)
+            binding.scanList.adapter?.notifyDataSetChanged()
+        }
     }
 
     private fun initToggleActions() {
         binding.ScanTitle.setOnClickListener {
-            togglePlayPauseAction()
+            scanBLEDevices()
         }
 
-        binding.playbutton.setOnClickListener {
-            togglePlayPauseAction()
+        binding.playButton.setOnClickListener {
+            scanBLEDevices()
         }
     }
 
@@ -136,17 +188,21 @@ class ScanActivity : AppCompatActivity() {
     }
 
     private fun togglePlayPauseAction(){
-        mScanning = !mScanning
+
         if(mScanning){
             binding.ScanTitle.text = getString(R.string.ble_scan_title_pause)
-            binding.playbutton.setImageResource(R.drawable.pause)
+            binding.playButton.setImageResource(R.drawable.pause)
             binding.progressBar.isVisible = true
         } else {
             binding.ScanTitle.text = getString(R.string.ble_scan_title_play)
-            binding.playbutton.setImageResource(R.drawable.play)
+            binding.playButton.setImageResource(R.drawable.play)
             binding.progressBar.isVisible = false
         }
 
+    }
+
+    companion object {
+        private val SCAN_PERIOD: Long = 10000
     }
 
 
