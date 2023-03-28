@@ -36,7 +36,7 @@ class ScanActivity : AppCompatActivity() {
     }
 
     val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        permission ->
+            permission ->
         if (permission.all {it.value}) {
             scanBLEDevices()
         }
@@ -48,9 +48,11 @@ class ScanActivity : AppCompatActivity() {
 
 
     private val handler = Handler(Looper.getMainLooper())
+    private lateinit var adapter: ScanAdapter
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         binding = ActivityScanBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -67,42 +69,22 @@ class ScanActivity : AppCompatActivity() {
             togglePlayPauseAction()
         }
         binding.playButton.setOnClickListener {
+            if(allPermissionGranted()){
+                initToggleActions()
+                scanBLEDevices()
+            }else {
+
+                requestPermissionLauncher.launch(getAllPermission())
+            }
             togglePlayPauseAction()
-        }
-
-        binding.scanList.layoutManager = LinearLayoutManager(this)
-        binding.scanList.setHasFixedSize(false)
-        binding.scanList.adapter = ScanAdapter(arrayListOf()) {
-            val intent = Intent(this, DeviceActivity::class.java)
-            intent.putExtra("device", it)
-            startActivity(intent)
-        }
-
-
-        binding.playButton.setOnClickListener {
             val progressBar = findViewById<ProgressBar>(R.id.progressBar)
 
             progressBar.setIndeterminate(true)
-
         }
 
         // binding.ScanTitle.layoutManage = LinearLayoutManager(this)
         // binding.ScanTitle.layoutAdapter = LinearLayoutManager(this)
 
-    }
-
-    private fun handleBLENotAvailable() {
-        binding.ScanTitle.text = getString(R.string.ble_scan_title_pause)
-    }
-
-    private fun scanDeviceWithPermission() {
-        if(allPermissionGranted()){
-            scanBLEDevices()
-            initToggleActions()
-        }else {
-
-            requestPermissionLauncher.launch(getAllPermission())
-        }
     }
 
     @SuppressLint("MissingPermission")
@@ -114,11 +96,22 @@ class ScanActivity : AppCompatActivity() {
         }
     }
 
+    private fun handleBLENotAvailable() {
+        binding.ScanTitle.text = getString(R.string.ble_scan_title_pause)
+    }
 
+    private fun scanDeviceWithPermission() {
+        if(allPermissionGranted()){
+            initToggleActions()
+            scanBLEDevices()
+
+        }else {
+
+            requestPermissionLauncher.launch(getAllPermission())
+        }
+    }
 
     // Stops scanning after 10 seconds.
-
-
     @SuppressLint("MissingPermission")
     private fun scanBLEDevices() {
         if (!mScanning) { // Stops mScanning after a pre-defined scan period.
@@ -142,12 +135,24 @@ class ScanActivity : AppCompatActivity() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             super.onScanResult(callbackType, result)
             Log.d("Scan", "result: $result")
-            (binding.scanList.adapter as ScanAdapter)?.addDevice(result.device)
-            binding.scanList.adapter?.notifyDataSetChanged()
+            binding.scanList.adapter = adapter
+
+            adapter.addDevice(result.device)
+            adapter.notifyDataSetChanged()
         }
     }
 
     private fun initToggleActions() {
+        binding.scanList.layoutManager = LinearLayoutManager(this)
+        binding.scanList.setHasFixedSize(false)
+        adapter = ScanAdapter(arrayListOf()) {
+            val intent = Intent(this, DeviceActivity::class.java)
+            intent.putExtra("device", it)
+            startActivity(intent)
+        }
+        binding.scanList.adapter = adapter
+
+
         binding.ScanTitle.setOnClickListener {
             scanBLEDevices()
         }
@@ -155,15 +160,19 @@ class ScanActivity : AppCompatActivity() {
         binding.playButton.setOnClickListener {
             scanBLEDevices()
         }
+
+
+
+
     }
 
     private fun allPermissionGranted(): Boolean {
         val allPermissions = getAllPermission()
         return allPermissions.all { permission ->
             ContextCompat.checkSelfPermission(
-            this, permission) == PackageManager.PERMISSION_GRANTED
+                this, permission) == PackageManager.PERMISSION_GRANTED
         } || requestPermissions(allPermissions)
-            //true
+        //true
     }
 
     private fun requestPermissions(permissions: Array<String>): Boolean {
@@ -199,6 +208,7 @@ class ScanActivity : AppCompatActivity() {
             binding.playButton.setImageResource(R.drawable.play)
             binding.progressBar.isVisible = false
         }
+
 
     }
 
