@@ -1,5 +1,6 @@
 package fr.isen.clavieres.androidsmartdevice
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -17,8 +18,9 @@ class ScanAdapter (var devices: ArrayList<BluetoothDevice>, var onDeviceClickLis
 
     override fun getItemCount(): Int = devices.size
 
+    @SuppressLint("MissingPermission")
     override fun onBindViewHolder(holder: ScanViewHolder, position: Int) {
-        holder.deviceName.text = devices[position].address
+        holder.deviceName.text = devices[position].name ?: "Unknow"
         holder.itemView.setOnClickListener {
             onDeviceClickListener(devices[position])
         }
@@ -27,10 +29,11 @@ class ScanAdapter (var devices: ArrayList<BluetoothDevice>, var onDeviceClickLis
         val deviceName : TextView = binding.ScanTitle
     }
 
+    @SuppressLint("MissingPermission")
     fun addDevice(device: BluetoothDevice){
         var shouldAddDevice = true
         devices.forEachIndexed { index, bluetoothDevice ->
-            if (bluetoothDevice.address == device.address) {
+            if (bluetoothDevice.name == device.name) {
                 devices[index] = device
                 shouldAddDevice = false
             }

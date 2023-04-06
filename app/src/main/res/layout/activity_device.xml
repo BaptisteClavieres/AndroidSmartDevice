@@ -11,8 +11,10 @@
         android:layout_height="120dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/progressBar2"
+        app:layout_constraintVertical_bias="0.186"
         app:srcCompat="@drawable/bulb" />
 
     <ImageView
@@ -40,7 +42,7 @@
         android:id="@+id/textDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
+        android:text="Affichage des différentes LEDs"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/progressBar2" />
 
@@ -62,4 +64,38 @@
         app:layout_constraintStart_toEndOf="@+id/led2"
         app:layout_constraintTop_toTopOf="@+id/led2"
         app:srcCompat="@drawable/bulb" />
+
+    <TextView
+        android:id="@+id/textNotif"
+        android:layout_width="185dp"
+        android:layout_height="39dp"
+        android:layout_marginTop="36dp"
+        android:layout_marginEnd="60dp"
+        android:text="Abonnez vous pour recevoir le nombre d'incrémentation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.096"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/led2" />
+
+    <Switch
+        android:id="@+id/switchRecevoir"
+        android:layout_width="124dp"
+        android:layout_height="67dp"
+        android:text="Recevoir"
+        app:layout_constraintBottom_toBottomOf="@+id/textNotif"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/textNotif"
+        app:layout_constraintTop_toTopOf="@+id/textNotif" />
+
+    <TextView
+        android:id="@+id/textIncre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nombre : 6"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.242"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textNotif"
+        app:layout_constraintVertical_bias="0.232" />
 </androidx.constraintlayout.widget.ConstraintLayout>
